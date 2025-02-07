@@ -1,505 +1,573 @@
 import os
-import shutil  # Import for file operations
+import shutil
 import tkinter as tk
 from pathlib import Path
+from queue import Queue
+from threading import Lock
 
 import ollama
 
-# Configuration
-OLLAMA_MODELS = {
-    "analysis": "llama3.2:latest",  # Project structure analysis
-    "generation": "olmo2:13b",  # Improvement suggestions
-    "vetting": "deepseek-r1",  # Code review
-    "finalization": "deepseek-r1:14b",  # Implementation planning
-    "enhancement": "phi4:latest",  # Advanced optimization
-    "comprehensive": "phi4:latest",  # Final project review
-    "presenter": "deepseek-r1:14b",  # Final report generation
-}
 
-# Progress messages
-PROGRESS_MESSAGES = {
-    "start": "Analyzing software project...\n",
-    "analyzing": "Phase 1/6: Project Analysis\n",
-    "analysis_done": "Analysis complete.\n\n",
-    "generating": "Phase 2/6: Improvement Planning\n",
-    "generation_done": "Planning complete.\n\n",
-    "vetting": "Phase 3/6: Code Review\n",
-    "vetting_done": "Review complete.\n\n",
-    "finalizing": "Phase 4/6: Implementation Planning\n",
-    "finalize_done": "Planning complete.\n\n",
-    "enhancing": "Phase 5/6: Optimization\n",
-    "enhance_done": "Optimization complete.\n\n",
-    "comprehensive": "Phase 6/6: Final Review\n",
-    "complete": "Process complete.\n\n",
-}
+# Configuration Component
+class Config:
+    MODELS = {
+        # Project structure analysis
+        "analysis": "llama3.2:latest",
+        # Improvement suggestions
+        "generation": "olmo2:13b",
+        # Code review
+        "vetting": "deepseek-r1",
+        # Implementation planning
+        "finalization": "deepseek-r1:14b",
+        # Advanced optimization
+        "enhancement": "phi4:latest",
+        # Final project review
+        "comprehensive": "phi4:latest",
+        # Final report generation
+        "presenter": "deepseek-r1:14b",
+    }
+
+    PROGRESS_MESSAGES = {
+        "start": "Starting code enhancement pipeline...\n",
+        "analyzing": (
+            "Phase 1/7: Code Analysis - " "Understanding structure and patterns\n"
+        ),
+        "analysis_done": "Initial analysis complete.\n\n",
+        "generating": (
+            "Phase 2/7: Generating Improvements - "
+            "Identifying optimization opportunities\n"
+        ),
+        "generation_done": "Improvement suggestions generated.\n\n",
+        "vetting": ("Phase 3/7: Code Review - " "Validating proposed changes\n"),
+        "vetting_done": "Code review complete.\n\n",
+        "finalizing": (
+            "Phase 4/7: Implementation - " "Applying validated improvements\n"
+        ),
+        "finalize_done": "Implementation complete.\n\n",
+        "enhancing": ("Phase 5/7: Advanced Optimization - " "Fine-tuning the code\n"),
+        "enhance_done": "Optimization complete.\n\n",
+        "comprehensive": ("Phase 6/7: Final Review - " "Ensuring code perfection\n"),
+        "comprehensive_done": "Final review complete.\n\n",
+        "presenting": ("Phase 7/7: Final Polish - " "Applying finishing touches\n"),
+        "complete": ("Enhancement pipeline complete. " "Code is now optimized.\n\n"),
+    }
 
 
-def analyze_project(project_path, model_name):
-    """Analyzes the entire software project structure."""
-    try:
-        # Get project structure
-        structure = []
-        for root, dirs, files in os.walk(project_path):
-            level = root.replace(project_path, "").count(os.sep)
-            indent = " " * 4 * level
-            structure.append(f"{indent}{os.path.basename(root)}/")
-            subindent = " " * 4 * (level + 1)
-            for f in files:
-                structure.append(f"{subindent}{f}")
+# File Processing Component
+class FileProcessor:
+    @staticmethod
+    def find_text_files(directory):
+        """Find all text files in the directory."""
+        text_files = []
 
-        project_structure = "\n".join(structure)
+        for root, _, files in os.walk(directory):
+            for file in files:
+                # Skip backup files and hidden files
+                if not file.endswith(".bak") and not file.startswith("."):
+                    file_path = os.path.join(root, file)
+                    try:
+                        # Try to read the file to ensure it's a text file
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            f.read(1024)  # Read first 1KB to check if readable
+                        text_files.append(file_path)
+                    except (UnicodeDecodeError, IOError):
+                        # Skip binary files or files that can't be read as text
+                        continue
 
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    "Analyze this software project structure:\n\n"
-                    f"{project_structure}\n\n"
-                    "Focus on:\n"
-                    "1. Overall architecture and organization\n"
-                    "2. Project structure and patterns\n"
-                    "3. Potential architectural issues\n"
-                    "4. Dependencies and relationships\n"
-                    "5. Best practices compliance\n\n"
-                    "Provide a clear, focused analysis that will help in "
-                    "improving this project. Stay focused on architectural "
-                    "and structural aspects."
-                ),
-            }
-        ]
-        try:
-            response = ollama.chat(model=model_name, messages=messages)
-            return response["message"]["content"]
-        except Exception as e:
-            print(f"Error during project analysis: {e}")
-            return None
-    except Exception as e:
-        print(f"Error during project analysis: {e}")
+        return text_files
+
+    @staticmethod
+    def create_backup(file_path):
+        """Create a backup of the file."""
+        backup_path = file_path + ".bak"
+        shutil.copy2(file_path, backup_path)
+        return backup_path
+
+    @staticmethod
+    def read_file(file_path):
+        """Read the contents of a file."""
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+
+    @staticmethod
+    def write_file(file_path, content):
+        """Write content to a file."""
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+
+# Queue Management Component
+class QueueManager:
+    def __init__(self):
+        self.queue = Queue()
+        self.current_file = None
+        self.processed_files = []
+        self.lock = Lock()
+
+    def add_file(self, file_path):
+        """Add a file to the queue."""
+        with self.lock:
+            if file_path not in self.processed_files:
+                self.queue.put(file_path)
+                return True
+        return False
+
+    def get_next_file(self):
+        """Get the next file from the queue."""
+        with self.lock:
+            if not self.queue.empty():
+                self.current_file = self.queue.get()
+                return self.current_file
         return None
 
+    def mark_complete(self, file_path):
+        """Mark a file as processed."""
+        with self.lock:
+            self.processed_files.append(file_path)
+            self.current_file = None
 
-def generate_improvements(analysis, model_name):
-    """Generates potential project-wide improvements."""
-    try:
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    f"Based on this project analysis: '{analysis}'\n\n"
-                    "Generate specific improvements that:\n"
-                    "1. Address architectural issues\n"
-                    "2. Enhance project structure\n"
-                    "3. Improve modularity\n"
-                    "4. Optimize dependencies\n"
-                    "5. Follow industry best practices\n\n"
-                    "Important: Generate practical, focused improvements "
-                    "that can be realistically implemented. Focus on "
-                    "project-wide enhancements."
-                ),
+    def get_status(self):
+        """Get the current queue status."""
+        with self.lock:
+            return {
+                "pending": list(self.queue.queue),
+                "current": self.current_file,
+                "completed": self.processed_files,
             }
-        ]
+
+
+# Enhancement Pipeline Component
+class EnhancementPipeline:
+    def __init__(self):
+        self.models = Config.MODELS
+
+    def enhance_phase(self, code, model_name, phase_prompt):
+        """Enhances code using a specific model and phase-specific prompt."""
         try:
+            messages = [
+                {
+                    "role": "user",
+                    "content": (
+                        f"{phase_prompt}\n\n"
+                        "Current code:\n```\n"
+                        f"{code}\n"
+                        "```\n\n"
+                        "Return ONLY the improved code without any explanations "
+                        "or markdown."
+                    ),
+                }
+            ]
             response = ollama.chat(model=model_name, messages=messages)
-            return response["message"]["content"]
+            improved_code = response["message"]["content"]
+
+            # Clean up the response
+            improved_code = improved_code.strip()
+            if improved_code.startswith("```"):
+                improved_code = improved_code.split("```")[1]
+            if improved_code.startswith("python"):
+                improved_code = improved_code[6:]
+            improved_code = improved_code.strip()
+
+            return improved_code
         except Exception as e:
-            print(f"Error during improvement generation: {e}")
+            print(f"Error during code enhancement phase: {e}")
             return None
-    except Exception as e:
-        print(f"Error during improvement generation: {e}")
-        return None
 
-
-def review_project(improvements, model_name):
-    """Reviews and validates the suggested project improvements."""
-    try:
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    "Review these project improvements: "
-                    f"'{improvements}'\n\n"
-                    "Evaluate how well they enhance the project:\n"
-                    "1. Are they architecturally sound?\n"
-                    "2. Do they improve maintainability?\n"
-                    "3. Are they scalable?\n"
-                    "4. Do they follow best practices?\n"
-                    "5. Are they practical to implement?\n\n"
-                    "Important: Focus on validating improvements that "
-                    "will benefit the entire project. Flag any suggestions "
-                    "that might introduce complexity or technical debt."
-                ),
-            }
-        ]
+    def enhance_file(self, file_path):
+        """Enhances a file through multiple phases of improvement."""
         try:
-            response = ollama.chat(model=model_name, messages=messages)
-            return response["message"]["content"]
+            current_code = FileProcessor.read_file(file_path)
+
+            # Phase 1: Analysis and Structure
+            analysis_prompt = """
+            Analyze and improve this code focusing on:
+            1. Code structure and organization
+            2. Function decomposition
+            3. Variable naming
+            4. Code flow
+            5. Documentation
+            Make structural improvements while preserving functionality.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["analysis"], analysis_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 2: Optimizations
+            optimization_prompt = """
+            Optimize this code focusing on:
+            1. Algorithm efficiency
+            2. Memory usage
+            3. Time complexity
+            4. Resource utilization
+            5. Performance bottlenecks
+            Implement optimizations while maintaining readability.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["generation"], optimization_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 3: Best Practices
+            review_prompt = """
+            Review and improve this code focusing on:
+            1. Best practices
+            2. Design patterns
+            3. SOLID principles
+            4. DRY principle
+            5. Code maintainability
+            Apply industry standard practices while ensuring code quality.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["vetting"], review_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 4: Error Handling
+            implementation_prompt = """
+            Enhance implementation focusing on:
+            1. Error handling
+            2. Edge cases
+            3. Input validation
+            4. Exception handling
+            5. Defensive programming
+            Implement robust error handling while maintaining code clarity.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["finalization"], implementation_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 5: Advanced Optimization
+            advanced_prompt = """
+            Perform advanced optimization focusing on:
+            1. Code elegance
+            2. Functional programming concepts
+            3. Modern language features
+            4. Clean code principles
+            5. Advanced patterns
+            Apply sophisticated improvements while ensuring maintainability.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["enhancement"], advanced_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 6: Comprehensive Review
+            final_prompt = """
+            Perform final review focusing on:
+            1. Overall code quality
+            2. Consistency
+            3. Documentation completeness
+            4. API design
+            5. Future maintainability
+            Ensure the code is perfect and production-ready.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["comprehensive"], final_prompt
+            )
+            if not current_code:
+                return None
+
+            # Phase 7: Final Polish
+            polish_prompt = """
+            Apply final polish focusing on:
+            1. Code formatting
+            2. Documentation style
+            3. Comment clarity
+            4. Naming consistency
+            5. Overall aesthetics
+            Ensure the code is pristine and professional and error free.
+            """
+            current_code = self.enhance_phase(
+                current_code, self.models["presenter"], polish_prompt
+            )
+            if not current_code:
+                return None
+
+            return current_code
         except Exception as e:
-            print(f"Error during project review: {e}")
+            print(f"Error during code enhancement: {e}")
             return None
-    except Exception as e:
-        print(f"Error during project review: {e}")
-        return None
 
 
-def plan_implementation(review_report, model_name):
-    """Creates implementation plan for validated improvements."""
-    try:
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    f"Based on this review: {review_report}\n\n"
-                    "Create an implementation plan that:\n"
-                    "1. Prioritizes improvements\n"
-                    "2. Breaks down into manageable tasks\n"
-                    "3. Identifies dependencies\n"
-                    "4. Minimizes disruption\n"
-                    "5. Includes rollback strategies\n\n"
-                    "Important: Create a practical plan that can be "
-                    "executed incrementally while maintaining project "
-                    "stability."
-                ),
-            }
-        ]
-        try:
-            response = ollama.chat(model=model_name, messages=messages)
-            return response["message"]["content"]
-        except Exception as e:
-            print(f"Error during implementation planning: {e}")
-            return None
-    except Exception as e:
-        print(f"Error during implementation planning: {e}")
-        return None
+# GUI Component
+class EnhancerGUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Code Enhancement Pipeline")
+        self.root.configure(bg="#f0f0f0")
+        self.root.minsize(1000, 800)
 
+        self.main_frame = tk.Frame(self.root, bg="#f0f0f0", padx=20, pady=20)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-def optimize_project(implementation_plan, model_name):
-    """Optimizes the implementation plan."""
-    try:
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    "Optimize this implementation plan:\n\n"
-                    f"{implementation_plan}\n\n"
-                    "Focus on:\n"
-                    "1. Resource efficiency\n"
-                    "2. Risk mitigation\n"
-                    "3. Timeline optimization\n"
-                    "4. Quality assurance\n"
-                    "5. Success metrics\n\n"
-                    "Important: Optimize the plan while maintaining "
-                    "feasibility and risk management. Return ONLY the "
-                    "optimized version."
-                ),
-            }
-        ]
-        try:
-            response = ollama.chat(model=model_name, messages=messages)
-            return response["message"]["content"]
-        except Exception as e:
-            print(f"Error during plan optimization: {e}")
-            return None
-    except Exception as e:
-        print(f"Error during plan optimization: {e}")
-        return None
+        self.queue_manager = QueueManager()
+        self.pipeline = EnhancementPipeline()
 
+        self.setup_ui()
 
-def comprehensive_review(
-    project_path,
-    analysis_report,
-    improvements,
-    review_report,
-    implementation_plan,
-    optimized_plan,
-    model_name,
-):
-    """Creates final report with complete enhancement strategy."""
-    try:
-        # First, use phi4 for comprehensive review
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    "Review all project enhancement documents and create "
-                    "a comprehensive strategy:\n\n"
-                    f"Project: {project_path}\n"
-                    f"Analysis: {analysis_report}\n"
-                    f"Improvements: {improvements}\n"
-                    f"Review: {review_report}\n"
-                    f"Implementation: {implementation_plan}\n"
-                    f"Optimization: {optimized_plan}\n\n"
-                    "Create a refined strategy that ensures successful "
-                    "project enhancement while minimizing risks."
-                ),
-            }
-        ]
-        try:
-            response = ollama.chat(model=model_name, messages=messages)
-            improved = response["message"]["content"]
-        except Exception as e:
-            print(f"Error during comprehensive review: {e}")
-            improved = None
+    def setup_ui(self):
+        """Set up the user interface."""
+        # Create model status indicators
+        self.model_indicators = self.create_model_indicators()
 
-        # Then use deepseek-r1:14b for final report
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    "You are the final report generator. Review this "
-                    "enhancement strategy and create a clear, actionable "
-                    f"report:\n\n{improved}\n\n"
-                    "Requirements:\n"
-                    "1. Clear executive summary\n"
-                    "2. Prioritized recommendations\n"
-                    "3. Implementation roadmap\n"
-                    "4. Risk assessment\n"
-                    "5. Success metrics\n\n"
-                    "Create a professional report that stakeholders can "
-                    "use to guide the enhancement process.\n\n"
-                    "Start your response with 'ENHANCEMENT REPORT:' "
-                    "followed by the complete report."
-                ),
-            }
-        ]
-        try:
-            response = ollama.chat(model=OLLAMA_MODELS["presenter"], messages=messages)
-            return response["message"]["content"]
-        except Exception as e:
-            print(f"Error during report generation: {e}")
-            return None
-    except Exception as e:
-        print(f"Error during comprehensive review: {e}")
-        return None
+        # Left panel for input and progress
+        self.left_panel = tk.Frame(self.main_frame, bg="#f0f0f0")
+        self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # Input section
+        self.setup_input_section()
 
-def create_model_indicators(parent):
-    """Creates a frame with model status indicators."""
-    frame = tk.Frame(parent, bg="#f0f0f0")
-    frame.pack(fill=tk.X, pady=(0, 10))
+        # Output section
+        self.setup_output_section()
 
-    indicators = {}
-    for model_type in OLLAMA_MODELS:
-        label = tk.Label(
+        # Right panel for queue status
+        self.setup_queue_panel()
+
+        # Process button
+        self.setup_process_button()
+
+    def create_model_indicators(self):
+        """Creates model status indicators."""
+        frame = tk.Frame(self.main_frame, bg="#f0f0f0")
+        frame.pack(fill=tk.X, pady=(0, 10))
+
+        indicators = {}
+        for model_type in Config.MODELS:
+            label = tk.Label(
+                frame,
+                text=f"● {model_type}",
+                font=("Arial", 9),
+                fg="#666666",
+                bg="#f0f0f0",
+                padx=5,
+            )
+            label.pack(side=tk.LEFT)
+            indicators[model_type] = label
+
+        return indicators
+
+    def create_scrolled_text(self, parent, height=10, width=50, readonly=False):
+        """Create a scrolled text widget."""
+        frame = tk.Frame(parent)
+
+        scrollbar = tk.Scrollbar(frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        text_widget = tk.Text(
             frame,
-            text=f"● {model_type}",
-            font=("Arial", 9),
-            fg="#666666",
-            bg="#f0f0f0",
-            padx=5,
+            height=height,
+            width=width,
+            yscrollcommand=scrollbar.set,
+            wrap=tk.WORD,
+            font=("Arial", 10),
         )
-        label.pack(side=tk.LEFT)
-        indicators[model_type] = label
 
-    return indicators
+        if readonly:
+            text_widget.config(state=tk.DISABLED)
 
+        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=text_widget.yview)
 
-def create_scrolled_text(parent, height=10, width=50, readonly=False):
-    """Helper function to create a Text widget with a scrollbar."""
-    frame = tk.Frame(parent)
+        return frame, text_widget
 
-    scrollbar = tk.Scrollbar(frame)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    def setup_input_section(self):
+        """Set up the input section."""
+        input_label = tk.Label(
+            self.left_panel,
+            text="Enter project path:",
+            font=("Arial", 12, "bold"),
+            bg="#f0f0f0",
+        )
+        input_label.pack(anchor=tk.W)
 
-    text_widget = tk.Text(
-        frame,
-        height=height,
-        width=width,
-        yscrollcommand=scrollbar.set,
-        wrap=tk.WORD,
-        font=("Arial", 10),
-    )
+        self.input_frame, self.input_text = self.create_scrolled_text(
+            self.left_panel,
+            height=2,
+            width=60,
+        )
+        self.input_frame.pack(fill=tk.X, pady=(5, 15))
 
-    if readonly:
-        text_widget.config(state=tk.DISABLED)
+    def setup_output_section(self):
+        """Set up the output section."""
+        output_label = tk.Label(
+            self.left_panel,
+            text="Enhancement Progress:",
+            font=("Arial", 12, "bold"),
+            bg="#f0f0f0",
+        )
+        output_label.pack(anchor=tk.W)
 
-    text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    scrollbar.config(command=text_widget.yview)
+        self.output_frame, self.output_text = self.create_scrolled_text(
+            self.left_panel,
+            height=30,
+            width=60,
+            readonly=True,
+        )
+        self.output_frame.pack(fill=tk.BOTH, expand=True, pady=(5, 15))
 
-    return frame, text_widget
+    def setup_queue_panel(self):
+        """Set up the queue status panel."""
+        right_panel = tk.Frame(self.main_frame, bg="#f0f0f0", padx=20)
+        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH)
 
+        queue_label = tk.Label(
+            right_panel,
+            text="Processing Queue:",
+            font=("Arial", 12, "bold"),
+            bg="#f0f0f0",
+        )
+        queue_label.pack(anchor=tk.W)
 
-def enhance_code(file_path, model_name):
-    """Generates improved code for a given file using Ollama."""
-    try:
-        with open(file_path, "r") as f:
-            original_code = f.read()
+        self.queue_frame, self.queue_text = self.create_scrolled_text(
+            right_panel,
+            height=30,
+            width=40,
+            readonly=True,
+        )
+        self.queue_frame.pack(fill=tk.BOTH, expand=True, pady=(5, 15))
 
-        messages = [
-            {
-                "role": "user",
-                "content": (
-                    f"Here is the original code from {file_path}:\n\n```\n"
-                    f"{original_code}\n```\n\n"
-                    "Improve this code, focusing on:\n"
-                    "1. Correctness\n"
-                    "2. Efficiency\n"
-                    "3. Readability\n"
-                    "4. Best practices\n"
-                    "5. Error handling\n\n"
-                    "Return ONLY the improved code. Do not include "
-                    "explanations or comments. Just the code."
-                ),
-            }
-        ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during code enhancement: {e}")
-        return None
+    def setup_process_button(self):
+        """Set up the process button."""
+        self.process_button = tk.Button(
+            self.left_panel,
+            text="Start Enhancement Pipeline",
+            command=self.start_processing,
+            font=("Arial", 11),
+            bg="#4a90e2",
+            fg="white",
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2",
+        )
+        self.process_button.pack(pady=10)
 
+    def update_output(self, text):
+        """Update the output text area."""
+        self.output_text.config(state=tk.NORMAL)
+        self.output_text.delete(1.0, tk.END)
+        self.output_text.insert(tk.END, text)
+        self.output_text.config(state=tk.DISABLED)
+        self.output_text.see(tk.END)
 
-def process_project(input_text, update_output, set_active_model):
-    """Processes the project, analyzes, suggests, and applies improvements."""
-    progress_msgs = PROGRESS_MESSAGES
+    def update_queue_display(self):
+        """Update the queue display."""
+        status = self.queue_manager.get_status()
+        self.queue_text.config(state=tk.NORMAL)
+        self.queue_text.delete(1.0, tk.END)
 
-    # Get project path
-    project_path = input_text.get("1.0", tk.END).strip()
-    if not project_path:
-        update_output("Error: No project path entered.")
-        return
+        self.queue_text.insert(tk.END, "=== Queue Status ===\n\n")
 
-    if not Path(project_path).exists():
-        update_output("Error: Project path does not exist.")
-        return
+        if status["current"]:
+            self.queue_text.insert(tk.END, "Currently Processing:\n")
+            self.queue_text.insert(tk.END, f"- {status['current']}\n\n")
 
-    output = progress_msgs["start"]
-    update_output(output)
+        if status["pending"]:
+            self.queue_text.insert(tk.END, "Pending Files:\n")
+            for file in status["pending"]:
+                self.queue_text.insert(tk.END, f"- {file}\n")
+            self.queue_text.insert(tk.END, "\n")
 
-    # Phase 1: Project Analysis
-    set_active_model("analysis")
-    output += progress_msgs["analyzing"]
-    update_output(output)
+        if status["completed"]:
+            self.queue_text.insert(tk.END, "Completed Files:\n")
+            for file in status["completed"]:
+                self.queue_text.insert(tk.END, f"- {file}\n")
 
-    analysis_report = analyze_project(project_path, OLLAMA_MODELS["analysis"])
-    if not analysis_report:
-        update_output(output + "Error: Analysis failed.")
-        return
+        self.queue_text.config(state=tk.DISABLED)
 
-    output += progress_msgs["analysis_done"]
-    output += analysis_report + "\n\n"
-    update_output(output)
+    def set_active_model(self, model_type):
+        """Set the active model indicator."""
+        for label in self.model_indicators.values():
+            label.config(fg="#666666")
+        if model_type in self.model_indicators:
+            self.model_indicators[model_type].config(fg="#4a90e2")
 
-    # --- Simplified Enhancement (Single File: test/calculator.py) ---
-    file_to_enhance = os.path.join(project_path, "test/calculator.py")
-
-    if os.path.exists(file_to_enhance):
-        # 1. Enhance the code
-        set_active_model("enhancement")  # Use a suitable model
-        output += "Enhancing test/calculator.py...\n"
-        update_output(output)
-
-        improved_code = enhance_code(file_to_enhance, OLLAMA_MODELS["enhancement"])
-
-        if improved_code:
-            # 2. Create a backup
-            backup_path = file_to_enhance + ".bak"
-            try:
-                shutil.copy2(file_to_enhance, backup_path)
-                output += f"Backup created: {backup_path}\n"
-            except Exception as e:
-                output += f"Error creating backup: {e}\n"
-                update_output(output)
-                return
-
-            # 3. Overwrite the original file
-            try:
-                with open(file_to_enhance, "w") as f:
-                    f.write(improved_code)
-                output += "File updated: test/calculator.py\n"
-            except Exception as e:
-                output += f"Error writing to file: {e}\n"
-                update_output(output)
-                return
-        else:
-            output += "Error: Code enhancement failed.\n"
-            update_output(output)
+    def start_processing(self):
+        """Start the enhancement pipeline."""
+        project_path = self.input_text.get("1.0", tk.END).strip()
+        if not project_path:
+            self.update_output("Error: No project path entered.")
             return
 
-    else:
-        output += "test/calculator.py not found. Skipping enhancement.\n"
+        if not Path(project_path).exists():
+            self.update_output("Error: Project path does not exist.")
+            return
 
-    output += progress_msgs["complete"]
-    update_output(output)
+        # Find all text files
+        text_files = FileProcessor.find_text_files(project_path)
+        if not text_files:
+            self.update_output("Error: No text files found in the directory.")
+            return
+
+        # Initialize queue
+        for file_path in text_files:
+            self.queue_manager.add_file(file_path)
+
+        # Update initial queue display
+        self.update_queue_display()
+
+        while True:
+            # Get next file to process
+            current_file = self.queue_manager.get_next_file()
+            if not current_file:
+                break
+
+            output = f"\nProcessing: {current_file}\n"
+            output += Config.PROGRESS_MESSAGES["start"]
+            self.update_output(output)
+            self.update_queue_display()
+
+            try:
+                # Create backup
+                FileProcessor.create_backup(current_file)
+                output += f"Backup created: {current_file}.bak\n\n"
+
+                # Process through enhancement pipeline
+                for phase, msg in Config.PROGRESS_MESSAGES.items():
+                    if phase.endswith("_done") or phase in ["start", "complete"]:
+                        continue
+
+                    self.set_active_model(phase.replace("ing", ""))
+                    output += msg
+                    self.update_output(output)
+
+                # Enhance the file
+                improved_code = self.pipeline.enhance_file(current_file)
+
+                if improved_code:
+                    FileProcessor.write_file(current_file, improved_code)
+                    output += f"File successfully enhanced: {current_file}\n"
+                    self.queue_manager.mark_complete(current_file)
+                else:
+                    output += "Error: Enhancement pipeline failed.\n"
+                    self.update_output(output)
+                    continue
+
+                output += Config.PROGRESS_MESSAGES["complete"]
+                self.update_output(output)
+                self.update_queue_display()
+
+            except Exception as e:
+                output += f"Error processing file: {e}\n"
+                self.update_output(output)
+                continue
+
+    def run(self):
+        """Start the GUI."""
+        self.root.mainloop()
 
 
 def main():
     """Main function."""
-
-    root = tk.Tk()
-    root.title("Software Project Enhancer")
-    root.configure(bg="#f0f0f0")
-    root.minsize(800, 600)
-
-    main_frame = tk.Frame(root, bg="#f0f0f0", padx=20, pady=20)
-    main_frame.pack(fill=tk.BOTH, expand=True)
-
-    # Create model status indicators
-    model_indicators = create_model_indicators(main_frame)
-
-    # Reset all indicators to inactive
-    def reset_indicators():
-        for label in model_indicators.values():
-            label.config(fg="#666666")
-
-    # Set an indicator as active
-    def set_active_model(model_type):
-        reset_indicators()
-        model_indicators[model_type].config(fg="#4a90e2")
-
-    input_label = tk.Label(
-        main_frame,
-        text="Enter project path:",
-        font=("Arial", 12, "bold"),
-        bg="#f0f0f0",
-    )
-    input_label.pack(anchor=tk.W)
-
-    input_frame, input_text = create_scrolled_text(
-        main_frame,
-        height=2,
-        width=80,
-    )
-    input_frame.pack(fill=tk.X, pady=(5, 15))
-
-    output_label = tk.Label(
-        main_frame,
-        text="Analysis Results:",
-        font=("Arial", 12, "bold"),
-        bg="#f0f0f0",
-    )
-    output_label.pack(anchor=tk.W)
-
-    output_frame, output_text = create_scrolled_text(
-        main_frame,
-        height=25,
-        width=80,
-        readonly=True,
-    )
-    output_frame.pack(fill=tk.BOTH, expand=True, pady=(5, 15))
-
-    def update_output(text):
-        """Updates the output text area."""
-        output_text.config(state=tk.NORMAL)
-        output_text.delete(1.0, tk.END)
-        output_text.insert(tk.END, text)
-        output_text.config(state=tk.DISABLED)
-        output_text.see(tk.END)
-
-    process_button = tk.Button(
-        main_frame,
-        text="Analyze & Enhance Project",
-        command=lambda: process_project(input_text, update_output, set_active_model),
-        font=("Arial", 11),
-        bg="#4a90e2",
-        fg="white",
-        padx=20,
-        pady=10,
-        relief=tk.RAISED,
-        cursor="hand2",
-    )
-    process_button.pack(pady=10)
-
-    root.mainloop()
+    app = EnhancerGUI()
+    app.run()
 
 
 if __name__ == "__main__":
