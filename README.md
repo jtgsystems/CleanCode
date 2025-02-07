@@ -1,99 +1,86 @@
-# Software Project Enhancer
+# Software Enhancement Pipeline
 
-This tool analyzes a software project, suggests improvements, reviews the
-suggestions, plans the implementation, optimizes the plan, and generates a final
-report. It leverages Ollama language models for each stage of the process.
+A Python application that uses multiple AI models to enhance and improve code
+through various stages of analysis and optimization.
 
-## Requirements
+## Project Structure
 
-- **Python:** This script requires Python 3.x.
-- **Ollama:** You need to have Ollama installed and running. Download it from
-  [https://ollama.com/](https://ollama.com/).
-- **Ollama Models:** The script uses specific Ollama models. Make sure you have
-  pulled them:
+```
+software_enhancer/
+├── __init__.py          # Package initialization
+├── config.py            # Configuration settings
+├── file_processor.py    # File operations handling
+├── queue_manager.py     # Processing queue management
+├── enhancement_pipeline.py  # Core enhancement logic
+├── gui.py              # Graphical user interface
+└── main.py             # Package entry point
+```
 
-  ```bash
-  ollama pull llama3.2:latest
-  ollama pull olmo2:13b
-  ollama pull deepseek-r1
-  ollama pull deepseek-r1:14b
-  ollama pull phi4:latest
-  ```
+## Components
 
-- **Tkinter:** This should come preinstalled with most Python installations. If
-  not:
-  - **Debian/Ubuntu:** `sudo apt-get install python3-tk`
-  - **Fedora/CentOS/RHEL:** `sudo yum install python3-tkinter`
-  - **macOS:** Usually included with Python from python.org.
-- **Python Libraries:**
+1. **Configuration (config.py)**
 
-  ```bash
-  pip install ollama tkinter pathlib
-  ```
+   - Manages model configurations and progress messages
+   - Defines the AI models used for each enhancement phase
+
+2. **File Processing (file_processor.py)**
+
+   - Handles file operations (find, read, write, backup)
+   - Manages text file detection and processing
+
+3. **Queue Management (queue_manager.py)**
+
+   - Manages the processing queue with thread-safe operations
+   - Tracks file processing status
+
+4. **Enhancement Pipeline (enhancement_pipeline.py)**
+
+   - Implements the core enhancement logic
+   - Processes files through 7 distinct phases:
+     1. Analysis and Structure
+     2. Optimizations
+     3. Best Practices
+     4. Error Handling
+     5. Advanced Optimization
+     6. Comprehensive Review
+     7. Final Polish
+
+5. **GUI (gui.py)**
+   - Provides a user-friendly interface
+   - Shows real-time progress and status
 
 ## Installation
 
-1. **Clone the repository** (if applicable - since this is a single file, this
-   step might not be necessary, but I'll include it for completeness).
+1. Clone the repository
+2. Install dependencies:
 
    ```bash
-    git clone <repository_url>
-    cd <repository_directory>
+   pip install -e .
    ```
-
-2. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   (You would need to create a `requirements.txt` file with `ollama`, `tkinter`,
-   and `pathlib` listed, but since you can't create new files in the root, I'll
-   just leave the command as is and the user can create it if they want)
 
 ## Usage
 
-1. **Run the script:**
+Run the application using:
 
-   ```bash
-   python software_enhancer.py
-   ```
-
-2. **Enter the project path:** In the application window, enter the absolute
-   path to the root directory of the software project you want to analyze.
-3. **Click "Analyze & Enhance Project":** The tool will start the analysis and
-   enhancement process. Progress and results will be displayed in the output
-   area.
-
-## Configuration
-
-The `OLLAMA_MODELS` dictionary in `software_enhancer.py` configures which Ollama
-models are used for each phase:
-
-```python
-OLLAMA_MODELS = {
-    "analysis": "llama3.2:latest",
-    "generation": "olmo2:13b",
-    "vetting": "deepseek-r1",
-    "finalization": "deepseek-r1:14b",
-    "enhancement": "phi4:latest",
-    "comprehensive": "phi4:latest",
-    "presenter": "deepseek-r1:14b",
-}
+```bash
+python run.py
 ```
 
-You can change these models if you have other models installed with Ollama and
-want to experiment. Make sure the models you choose are appropriate for the
-task.
+Or after installation:
 
-## Troubleshooting
+```bash
+enhance
+```
 
-- **"Error: No project path entered."**: Make sure you enter the project path in
-  the input field before clicking the button.
-- **"Error: Project path does not exist."**: Double-check the path you entered.
-  It must be the absolute path to a valid directory.
-- **"Error during ...":** If you encounter errors during any of the analysis or
-  generation phases, it might be due to issues with the Ollama models or network
-  connectivity. Make sure Ollama is running and the models are downloaded.
-- **GUI Issues:** If the GUI doesn't display correctly, ensure you have Tkinter
-  installed properly.
+## Features
+
+- Multi-phase code enhancement using various AI models
+- Real-time progress tracking
+- Automatic file backup before modifications
+- Thread-safe queue management
+- User-friendly GUI interface
+
+## Requirements
+
+- Python 3.8 or higher
+- Ollama AI models configured and running
