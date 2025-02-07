@@ -202,8 +202,12 @@ def comprehensive_review(
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        improved = response["message"]["content"]
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            improved = response["message"]["content"]
+        except Exception as e:
+            print(f"Error during comprehensive review: {e}")
+            improved = None
 
         # Then use deepseek-r1:14b as final presenter
         messages = [
@@ -227,11 +231,18 @@ def comprehensive_review(
                 ),
             }
         ]
-        response = ollama.chat(model=OLLAMA_MODELS["presenter"], messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during comprehensive review: {e}")
-        return None
+        try:
+            try:
+                response = ollama.chat(
+                    model=OLLAMA_MODELS["presenter"], messages=messages
+                )
+                return response["message"]["content"]
+            except Exception as e:
+                print(f"Error during comprehensive review: {e}")
+                return None
+        except Exception as e:
+            print(f"Error during comprehensive review: {e}")
+            return None
 
 
 def create_model_indicators(parent):
