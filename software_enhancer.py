@@ -1,4 +1,5 @@
 import os
+import shutil  # Import for file operations
 import tkinter as tk
 from pathlib import Path
 
@@ -317,9 +318,112 @@ def create_scrolled_text(parent, height=10, width=50, readonly=False):
     return frame, text_widget
 
 
+def enhance_code(file_path, model_name):
+    """Generates improved code for a given file using Ollama."""
+    try:
+        with open(file_path, "r") as f:
+            original_code = f.read()
+
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Here is the original code from {file_path}:\n\n```\n"
+                    f"{original_code}\n```\n\n"
+                    "Improve this code, focusing on:\n"
+                    "1. Correctness\n"
+                    "2. Efficiency\n"
+                    "3. Readability\n"
+                    "4. Best practices\n"
+                    "5. Error handling\n\n"
+                    "Return ONLY the improved code. Do not include "
+                    "explanations or comments. Just the code."
+                ),
+            }
+        ]
+        response = ollama.chat(model=model_name, messages=messages)
+        return response["message"]["content"]
+    except Exception as e:
+        print(f"Error during code enhancement: {e}")
+        return None
+
+
+def process_project(input_text, update_output, set_active_model):
+    """Processes the project, analyzes, suggests, and applies improvements."""
+    progress_msgs = PROGRESS_MESSAGES
+
+    # Get project path
+    project_path = input_text.get("1.0", tk.END).strip()
+    if not project_path:
+        update_output("Error: No project path entered.")
+        return
+
+    if not Path(project_path).exists():
+        update_output("Error: Project path does not exist.")
+        return
+
+    output = progress_msgs["start"]
+    update_output(output)
+
+    # Phase 1: Project Analysis
+    set_active_model("analysis")
+    output += progress_msgs["analyzing"]
+    update_output(output)
+
+    analysis_report = analyze_project(project_path, OLLAMA_MODELS["analysis"])
+    if not analysis_report:
+        update_output(output + "Error: Analysis failed.")
+        return
+
+    output += progress_msgs["analysis_done"]
+    output += analysis_report + "\n\n"
+    update_output(output)
+
+    # --- Simplified Enhancement (Single File: test/calculator.py) ---
+    file_to_enhance = os.path.join(project_path, "test/calculator.py")
+
+    if os.path.exists(file_to_enhance):
+        # 1. Enhance the code
+        set_active_model("enhancement")  # Use a suitable model
+        output += "Enhancing test/calculator.py...\n"
+        update_output(output)
+
+        improved_code = enhance_code(file_to_enhance, OLLAMA_MODELS["enhancement"])
+
+        if improved_code:
+            # 2. Create a backup
+            backup_path = file_to_enhance + ".bak"
+            try:
+                shutil.copy2(file_to_enhance, backup_path)
+                output += f"Backup created: {backup_path}\n"
+            except Exception as e:
+                output += f"Error creating backup: {e}\n"
+                update_output(output)
+                return
+
+            # 3. Overwrite the original file
+            try:
+                with open(file_to_enhance, "w") as f:
+                    f.write(improved_code)
+                output += "File updated: test/calculator.py\n"
+            except Exception as e:
+                output += f"Error writing to file: {e}\n"
+                update_output(output)
+                return
+        else:
+            output += "Error: Code enhancement failed.\n"
+            update_output(output)
+            return
+
+    else:
+        output += "test/calculator.py not found. Skipping enhancement.\n"
+
+    output += progress_msgs["complete"]
+    update_output(output)
+
+
 def main():
     """Main function."""
-    progress_msgs = PROGRESS_MESSAGES
 
     root = tk.Tk()
     root.title("Software Project Enhancer")
@@ -381,143 +485,10 @@ def main():
         output_text.config(state=tk.DISABLED)
         output_text.see(tk.END)
 
-    def process_project():
-        project_path = input_text.get("1.0", tk.END).strip()
-        if not project_path:
-            update_output("Error: No project path entered.")
-            return
-
-        if not Path(project_path).exists():
-            update_output("Error: Project path does not exist.")
-            return
-
-        output = progress_msgs["start"]
-        update_output(output)
-
-        # Phase 1: Project Analysis
-        set_active_model("analysis")
-        output += progress_msgs["analyzing"]
-        update_output(output)
-
-        analysis_report = analyze_project(
-            project_path,
-            OLLAMA_MODELS["analysis"],
-        )
-        if not analysis_report:
-            update_output(output + "Error: Analysis failed.")
-            return
-
-        output += progress_msgs["analysis_done"]
-        output += analysis_report + "\n\n"
-        update_output(output)
-
-        # Phase 2: Improvement Planning
-        set_active_model("generation")
-        output += progress_msgs["generating"]
-        update_output(output)
-
-        improvements = generate_improvements(
-            analysis_report,
-            OLLAMA_MODELS["generation"],
-        )
-        if not improvements:
-            update_output(output + "Error: Planning failed.")
-            return
-
-        output += progress_msgs["generation_done"]
-        output += improvements + "\n\n"
-        update_output(output)
-
-        # Phase 3: Project Review
-        set_active_model("vetting")
-        output += progress_msgs["vetting"]
-        update_output(output)
-
-        review_report = review_project(
-            improvements,
-            OLLAMA_MODELS["vetting"],
-        )
-        if not review_report:
-            update_output(output + "Error: Review failed.")
-            return
-
-        output += progress_msgs["vetting_done"]
-        output += review_report + "\n\n"
-        update_output(output)
-
-        # Phase 4: Implementation Planning
-        set_active_model("finalization")
-        output += progress_msgs["finalizing"]
-        update_output(output)
-
-        implementation_plan = plan_implementation(
-            review_report,
-            OLLAMA_MODELS["finalization"],
-        )
-        if not implementation_plan:
-            update_output(output + "Error: Planning failed.")
-            return
-
-        output += progress_msgs["finalize_done"]
-        output += implementation_plan + "\n\n"
-        update_output(output)
-
-        # Phase 5: Plan Optimization
-        set_active_model("enhancement")
-        output += progress_msgs["enhancing"]
-        update_output(output)
-
-        optimized_plan = optimize_project(
-            implementation_plan,
-            OLLAMA_MODELS["enhancement"],
-        )
-        if not optimized_plan:
-            update_output(output + "Error: Optimization failed.")
-            return
-
-        output += progress_msgs["enhance_done"]
-        output += optimized_plan + "\n\n"
-        update_output(output)
-
-        # Phase 6: Comprehensive Review
-        set_active_model("comprehensive")
-        output += progress_msgs["comprehensive"]
-        update_output(output)
-
-        comprehensive_result = comprehensive_review(
-            project_path,
-            analysis_report,
-            improvements,
-            review_report,
-            implementation_plan,
-            optimized_plan,
-            OLLAMA_MODELS["comprehensive"],
-        )
-        if not comprehensive_result:
-            update_output(output + "Error: Review failed.")
-            return
-
-        # Final report generation
-        set_active_model("presenter")
-        output += "Generating final report...\n"
-        update_output(output)
-
-        # Present final result
-        output += progress_msgs["complete"]
-        if "ENHANCEMENT REPORT:" in comprehensive_result:
-            final_text = comprehensive_result.split(
-                "ENHANCEMENT REPORT:",
-                1,
-            )[1].strip()
-            output += final_text + "\n"
-        else:
-            output += comprehensive_result + "\n"
-        update_output(output)
-
     process_button = tk.Button(
         main_frame,
         text="Analyze & Enhance Project",
-        command=process_project,
+        command=lambda: process_project(input_text, update_output, set_active_model),
         font=("Arial", 11),
         bg="#4a90e2",
         fg="white",
