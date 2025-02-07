@@ -51,11 +51,12 @@ def analyze_prompt(prompt, model_name):
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during analysis: {e}")
-        return None
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Error during analysis: {e}")
+            return None
 
 
 def generate_solutions(analysis, model_name):
@@ -78,11 +79,12 @@ def generate_solutions(analysis, model_name):
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during solution generation: {e}")
-        return None
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Error during solution generation: {e}")
+            return None
 
 
 def vet_and_refine(improvements, model_name):
@@ -106,11 +108,12 @@ def vet_and_refine(improvements, model_name):
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during vetting: {e}")
-        return None
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Error during vetting: {e}")
+            return None
 
 
 def finalize_prompt(vetting_report, original_prompt, model_name):
@@ -133,11 +136,12 @@ def finalize_prompt(vetting_report, original_prompt, model_name):
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during finalization: {e}")
-        return None
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Error during finalization: {e}")
+            return None
 
 
 def enhance_prompt(final_prompt, model_name):
@@ -161,11 +165,12 @@ def enhance_prompt(final_prompt, model_name):
                 ),
             }
         ]
-        response = ollama.chat(model=model_name, messages=messages)
-        return response["message"]["content"]
-    except Exception as e:
-        print(f"Error during enhancement: {e}")
-        return None
+        try:
+            response = ollama.chat(model=model_name, messages=messages)
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Error during enhancement: {e}")
+            return None
 
 
 def comprehensive_review(
