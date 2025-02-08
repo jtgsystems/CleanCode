@@ -1,0 +1,43 @@
+The code you provided is generally well-structured and follows good practices. It's great that you're using type hints, which improves readability and maintainability. Here are some suggestions to improve the code:
+
+1. Consider using an `.env` file or another method to manage API keys instead of using the `os.getenv` function. This can help avoid accidentally committing sensitive information to version control.
+
+2. The `_analyze_with_prompt` method catches all exceptions with a bare 'except'. To follow best practices, you should catch specific exceptions that you anticipate might occur, like `requests.exceptions.RequestException` for HTTP errors or `ValueError` for issues with the input.
+
+3. Add docstrings to methods describing their purpose and arguments. This can help users and maintainers understand the code better.
+
+4. In `analyze_code`, you can use list comprehension for more concise code:
+
+```python
+def analyze_code(self, code: str) -> Dict[str, List[Dict]]:
+    return {"analyses": [self._analyze_with_prompt(code, prompt_type) for prompt_type in ["quality", "security"]], "timestamp": os.path.getmtime(__file__)}
+```
+
+5. In `generate_report`, consider using the `str.format` function or f-strings for better readability when constructing the report.
+
+6. Consider adding type hints to class-level attributes.
+
+7. When defining the `system_messages` dictionary, you might want to place it outside the function to avoid recreating it every time `_analyze_with_prompt` is called.
+
+8. In `_analyze_with_prompt`, you can use a context manager for the requests.post call to automatically close the connection:
+
+```python
+with requests.post(
+    self.url,
+    headers=self.headers,
+    json={
+        "model": self.model,
+        "messages": [
+            {"role": "system", "content": system_messages[prompt_type]},
+            {"role": "user", "content": prompt},
+        ],
+    },
+) as response:
+    response.raise_for_status()
+    return {
+        "type": prompt_type,
+        "analysis": response.json()["choices"][0]["message"]["content"],
+    }
+```
+
+With these improvements, your code will follow best practices more closely, making it easier for others to understand and maintain.
