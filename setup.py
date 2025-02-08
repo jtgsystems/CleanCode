@@ -4,7 +4,12 @@ setup(
     name="ENHANCER",
     version="0.1.0",
     packages=find_packages(),
-    install_requires=["requests", "python-dotenv"],
+    install_requires=[
+        "requests",
+        "python-dotenv",
+        "groq",
+        "tiktoken",
+    ],
     entry_points={
         "console_scripts": [
             "enhancer=ENHANCER.gui:main",
