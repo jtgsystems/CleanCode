@@ -8,6 +8,7 @@ ENHANCER/cli.py
 ENHANCER/code_analyzer.py
 ENHANCER/config.py
 ENHANCER/final.py
+ENHANCER/final_enhanced.py
 ENHANCER/gui.py
 ENHANCER/list_models.py
 ENHANCER/test_sample.py
