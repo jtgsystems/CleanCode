@@ -14,6 +14,8 @@ Classifier: Programming Language :: Python :: 3.10
 Description-Content-Type: text/markdown
 Requires-Dist: requests
 Requires-Dist: python-dotenv
+Requires-Dist: groq
+Requires-Dist: tiktoken
 Dynamic: author
 Dynamic: author-email
 Dynamic: classifier
