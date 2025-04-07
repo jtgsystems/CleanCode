@@ -1,2 +1,0 @@
-[console_scripts]
-enhancer = ENHANCER.gui:main
