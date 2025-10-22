@@ -1,3 +1,5 @@
+![Banner](banner.png)
+
 # CleanCode - Advanced Code Analysis & Enhancement Tool
 
 CleanCode is a comprehensive Python-based tool that leverages multiple AI models to analyze code for potential improvements, issues, and best practices. It provides both a user-friendly Graphical User Interface (GUI) and command-line capabilities for flexible usage.
