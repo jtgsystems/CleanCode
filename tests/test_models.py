@@ -1,6 +1,5 @@
 """Tests for models module."""
 
-import pytest
 
 from ENHANCER.models import (
     get_all_models,

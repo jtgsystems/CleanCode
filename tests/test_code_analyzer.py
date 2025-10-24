@@ -3,8 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from ENHANCER.code_analyzer import (
     AnalysisResult,
     analyze_file,

@@ -1,9 +1,6 @@
 """Tests for config module."""
 
-import tempfile
 from pathlib import Path
-
-import pytest
 
 from ENHANCER.config import (
     get_all_config,
