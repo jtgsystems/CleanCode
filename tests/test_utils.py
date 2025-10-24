@@ -1,8 +1,6 @@
 """Tests for utils module."""
 
-from pathlib import Path
 
-import pytest
 
 from ENHANCER.utils import (
     count_lines,
