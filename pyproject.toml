@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ENHANCER"
+version = "1.0.0"
+description = "Advanced Code Analysis & Enhancement Tool using multiple AI models"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Roo"},
+]
+keywords = ["code analysis", "code enhancement", "AI", "code quality", "security", "best practices"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Tk",
+]
+
+dependencies = [
+    "requests>=2.32.0",
+    "groq>=0.33.0",
+    "openai>=2.0.0",
+    "anthropic>=0.71.0",
+    "google-generativeai>=0.8.0",
+    "python-dotenv>=1.0.0",
+    "tiktoken>=0.12.0",
+    "ollama>=0.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+]
+
+[project.scripts]
+enhancer = "ENHANCER.cli:main"
+
+[project.gui-scripts]
+enhancer-gui = "ENHANCER.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ENHANCER*"]
+
+[tool.setuptools.package-data]
+ENHANCER = ["analysis_reports/*", "logs/*", "*.modelfile", "*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "PIE",    # flake8-pie
+    "RET",    # flake8-return
+    "S",      # flake8-bandit
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "S101",   # assert used (common in tests)
+    "S108",   # /tmp usage (acceptable for temp files in config)
+    "N999",   # invalid module name (ENHANCER is intentional all-caps)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"test_*.py" = ["S101"]  # Allow assert in test files
+"check_ollama.py" = ["S607"]  # Allow partial executable paths in utility script
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+no_implicit_optional = true
+warn_redundant_casts = false
+warn_unused_ignores = false
+warn_no_return = true
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = [
+    "groq.*",
+    "anthropic.*",
+    "google.*",
+    "ollama.*",
+    "openai.*",
+    "tiktoken.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"

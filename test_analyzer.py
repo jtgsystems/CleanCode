@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 from ENHANCER.code_analyzer import (
-    analyze_directory,
     analyze_file,
     is_valid_python_file,
     validate_directory,

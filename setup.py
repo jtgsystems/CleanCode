@@ -2,6 +2,8 @@
 Setup configuration for ENHANCER package.
 """
 
+from pathlib import Path
+
 from setuptools import find_packages, setup
 
 setup(
@@ -33,7 +35,11 @@ setup(
     description="Advanced Code Analysis & Enhancement Tool using multiple AI models",
     url="https://github.com/username/CleanCode",  # Replace with actual repository URL if available
     # Use try/except to handle the case where README.md might not exist
-    long_description=open("README.md").read() if __import__("os").path.exists("README.md") else "",
+    long_description=(
+        Path("README.md").read_text(encoding="utf-8")
+        if Path("README.md").exists()
+        else ""
+    ),
     long_description_content_type="text/markdown",
     classifiers=[
         "Development Status :: 4 - Beta",
