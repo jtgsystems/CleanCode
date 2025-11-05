@@ -9,14 +9,14 @@ setup(
     version="1.0.0",  # Version information
     packages=find_packages(),
     install_requires=[
-        "requests>=2.25.0",
-        "groq>=0.3.0",
-        "openai>=1.0.0",
-        "anthropic>=0.5.0",
-        "google-generativeai>=0.1.0",
-        "python-dotenv>=0.19.0",
-        "tiktoken>=0.5.0",
-        "ollama>=0.1.0",
+        "requests>=2.31.0,<3.0.0",
+        "groq>=0.11.0,<1.0.0",
+        "openai>=1.55.0,<2.0.0",
+        "anthropic>=0.40.0,<1.0.0",
+        "google-generativeai>=0.8.0,<1.0.0",
+        "python-dotenv>=1.0.0,<2.0.0",
+        "tiktoken>=0.8.0,<1.0.0",
+        "ollama>=0.4.0,<1.0.0",
         # tkinter is part of the standard library and not listed in install_requires
     ],
     entry_points={
@@ -29,9 +29,9 @@ setup(
     },
     python_requires=">=3.8",
     author="Roo",
-    author_email="",  # Add author email if available
+    author_email="roo@jtgsystems.com",
     description="Advanced Code Analysis & Enhancement Tool using multiple AI models",
-    url="https://github.com/username/CleanCode",  # Replace with actual repository URL if available
+    url="https://github.com/jtgsystems/CleanCode",
     # Use try/except to handle the case where README.md might not exist
     long_description=open("README.md").read() if __import__("os").path.exists("README.md") else "",
     long_description_content_type="text/markdown",
@@ -46,6 +46,8 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Operating System :: OS Independent",
         "Environment :: Console",
         "Environment :: X11 Applications :: Tk",
