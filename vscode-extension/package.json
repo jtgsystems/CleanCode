@@ -1,0 +1,245 @@
+{
+  "name": "enhancer-code-intelligence",
+  "displayName": "ENHANCER Code Intelligence",
+  "description": "AI-powered code analysis with 30+ models. Real-time security, quality, and performance insights.",
+  "version": "1.0.0",
+  "publisher": "jtgsystems",
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Machine Learning",
+    "Testing"
+  ],
+  "keywords": [
+    "code analysis",
+    "ai",
+    "security",
+    "code quality",
+    "ollama",
+    "python",
+    "linter",
+    "static analysis"
+  ],
+  "activationEvents": [
+    "onLanguage:python",
+    "onCommand:enhancer.analyzeFile",
+    "onCommand:enhancer.analyzeWorkspace"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "enhancer.analyzeFile",
+        "title": "ENHANCER: Analyze Current File",
+        "icon": "$(search)"
+      },
+      {
+        "command": "enhancer.analyzeWorkspace",
+        "title": "ENHANCER: Analyze Workspace",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "enhancer.showSuggestions",
+        "title": "ENHANCER: Show Improvement Suggestions",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "enhancer.selectModel",
+        "title": "ENHANCER: Select AI Model",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "enhancer.exportReport",
+        "title": "ENHANCER: Export Analysis Report",
+        "icon": "$(export)"
+      },
+      {
+        "command": "enhancer.clearDiagnostics",
+        "title": "ENHANCER: Clear All Diagnostics",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "enhancer.analyzeFile",
+          "when": "resourceLangId == python",
+          "group": "enhancer@1"
+        },
+        {
+          "command": "enhancer.showSuggestions",
+          "when": "resourceLangId == python",
+          "group": "enhancer@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "enhancer.analyzeFile",
+          "when": "resourceLangId == python",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "enhancer.selectModel",
+          "when": "view == enhancerResults",
+          "group": "navigation"
+        },
+        {
+          "command": "enhancer.exportReport",
+          "when": "view == enhancerResults",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "enhancer-sidebar",
+          "title": "ENHANCER",
+          "icon": "images/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "enhancer-sidebar": [
+        {
+          "id": "enhancerResults",
+          "name": "Analysis Results"
+        },
+        {
+          "id": "enhancerModels",
+          "name": "AI Models"
+        },
+        {
+          "id": "enhancerMetrics",
+          "name": "Code Metrics"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ENHANCER",
+      "properties": {
+        "enhancer.enableRealTimeAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time code analysis as you type"
+        },
+        "enhancer.analysisDelay": {
+          "type": "number",
+          "default": 1000,
+          "description": "Delay (in ms) before analyzing after typing stops"
+        },
+        "enhancer.defaultModel": {
+          "type": "string",
+          "default": "codestral:latest",
+          "description": "Default AI model for analysis",
+          "enum": [
+            "enhancer-llama:latest",
+            "codestral:latest",
+            "qwen2.5-coder:latest",
+            "deepseek-r1:latest",
+            "phi4:latest",
+            "command-r7b:latest"
+          ]
+        },
+        "enhancer.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to Python interpreter with ENHANCER installed"
+        },
+        "enhancer.enableSecurityScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable security vulnerability scanning"
+        },
+        "enhancer.enablePerformanceAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable performance analysis"
+        },
+        "enhancer.maxFileSize": {
+          "type": "number",
+          "default": 10485760,
+          "description": "Maximum file size (in bytes) to analyze"
+        },
+        "enhancer.showInlineHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline code hints and suggestions"
+        },
+        "enhancer.severityLevel": {
+          "type": "string",
+          "default": "medium",
+          "description": "Minimum severity level to display",
+          "enum": ["low", "medium", "high", "critical"]
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "enhancer.securityHighlight",
+        "description": "Highlight color for security issues",
+        "defaults": {
+          "dark": "#ff6b6b",
+          "light": "#c92a2a",
+          "highContrast": "#ff0000"
+        }
+      },
+      {
+        "id": "enhancer.performanceHighlight",
+        "description": "Highlight color for performance issues",
+        "defaults": {
+          "dark": "#ffd93d",
+          "light": "#fab005",
+          "highContrast": "#ffff00"
+        }
+      },
+      {
+        "id": "enhancer.qualityHighlight",
+        "description": "Highlight color for quality issues",
+        "defaults": {
+          "dark": "#74c0fc",
+          "light": "#228be6",
+          "highContrast": "#00ffff"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jtgsystems/CleanCode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jtgsystems/CleanCode/issues"
+  },
+  "homepage": "https://github.com/jtgsystems/CleanCode#readme",
+  "license": "MIT"
+}
