@@ -1,5 +1,6 @@
 """
 Setup configuration for ENHANCER package.
+Updated: December 2025 - Latest framework versions
 """
 
 from setuptools import find_packages, setup
@@ -10,11 +11,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests>=2.32.5,<3.0.0",
-        "groq>=1.0.0,<2.0.0",
+        "groq>=0.33.0,<1.0.0",
         "openai>=2.14.0,<3.0.0",
         "anthropic>=0.75.0,<1.0.0",
-        "google-generativeai>=0.8.6,<1.0.0",
-        "python-dotenv>=1.2.1,<2.0.0",
+        "google-genai>=1.0.0,<2.0.0",  # Replaced deprecated google-generativeai
+        "python-dotenv>=1.1.0,<2.0.0",
         "tiktoken>=0.12.0,<1.0.0",
         "ollama>=0.6.1,<1.0.0",
         # tkinter is part of the standard library and not listed in install_requires
@@ -27,11 +28,11 @@ setup(
             "enhancer-gui=ENHANCER.gui:main",  # GUI interface
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     author="Roo",
     author_email="",  # Add author email if available
     description="Advanced Code Analysis & Enhancement Tool using multiple AI models",
-    url="https://github.com/username/CleanCode",  # Replace with actual repository URL if available
+    url="https://github.com/jtgsystems/CleanCode",
     # Use try/except to handle the case where README.md might not exist
     long_description=open("README.md").read() if __import__("os").path.exists("README.md") else "",
     long_description_content_type="text/markdown",
@@ -42,10 +43,11 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Operating System :: OS Independent",
         "Environment :: Console",
         "Environment :: X11 Applications :: Tk",
