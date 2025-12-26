@@ -9,14 +9,14 @@ setup(
     version="1.0.0",  # Version information
     packages=find_packages(),
     install_requires=[
-        "requests>=2.25.0",
-        "groq>=0.3.0",
-        "openai>=1.0.0",
-        "anthropic>=0.5.0",
-        "google-generativeai>=0.1.0",
-        "python-dotenv>=0.19.0",
-        "tiktoken>=0.5.0",
-        "ollama>=0.1.0",
+        "requests>=2.32.5,<3.0.0",
+        "groq>=1.0.0,<2.0.0",
+        "openai>=2.14.0,<3.0.0",
+        "anthropic>=0.75.0,<1.0.0",
+        "google-generativeai>=0.8.6,<1.0.0",
+        "python-dotenv>=1.2.1,<2.0.0",
+        "tiktoken>=0.12.0,<1.0.0",
+        "ollama>=0.6.1,<1.0.0",
         # tkinter is part of the standard library and not listed in install_requires
     ],
     entry_points={
