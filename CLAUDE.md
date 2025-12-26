@@ -79,9 +79,9 @@ CleanCode/
 - **ollama** (≥0.1.0) — Local model interface
 
 **AI Provider Libraries:**
-- **groq** (≥0.3.0) — Groq API client
-- **openai** (≥1.0.0) — OpenAI API client
-- **anthropic** (≥0.5.0) — Claude API client
+- **groq** (≥1.0.0) — Groq API client
+- **openai** (≥2.14.0) — OpenAI API client
+- **anthropic** (≥0.75.0) — Claude API client
 - **google-generativeai** (≥0.1.0) — Google Gemini API client
 - **tiktoken** (≥0.5.0) — Token counting for OpenAI models
 
