@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests>=2.32.5,<3.0.0",
-        "groq>=0.33.0,<1.0.0",
+        "groq>=0.33.0,<2.0.0",
         "openai>=2.14.0,<3.0.0",
         "anthropic>=0.75.0,<1.0.0",
         "google-genai>=1.0.0,<2.0.0",  # Replaced deprecated google-generativeai
