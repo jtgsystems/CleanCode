@@ -1,89 +1,128 @@
-# AGENTS.md
+# AGENTS.md — CleanCode Substrate Policy (SOTA 2026)
 
-## Senior Maintainer Contract
-- Purpose: keep this repository stable, secure, well-tested, and aligned with existing patterns.
-- Default mode: smallest safe change that solves the verified problem.
-- Do not guess conventions.
-- Do not disable tests, lint, type checks, or security controls to make a change pass.
-- Do not introduce major-version dependency upgrades without a migration plan and a dedicated PR.
+## 🔱 Senior Maintainer Contract & Universal Invariant
 
-## Repository Snapshot
-- Repository: `jtgsystems/CleanCode`
-- Default branch: `master`
-- Visibility: `public`
-- Summary: Clean code practices - Best practices for writing maintainable code
-- Detected stack: Python
+```text
+FactionProductionReady(CleanCode) ⇔
+  CorrectnessReady(S) ∧ SecurityReady(S) ∧ MultiModelConsensus(S) ∧
+  TruthEvidenceReady(S) ∧ HonestTestingGate(S) ∧ FastASTPerformance(S)
 
-## Read First
-- `README.md`
-- `CLAUDE.md`
-- `setup.py`
-- `.github/workflows/`
+CrossCuttingAxioms(CleanCode):
+  ∀ defect: DiagnoseBeforeFix(defect)
+  ∀ model_call: ValidateSchema(model_call) ∧ SecureFallback(model_call)
+  ∀ file_op: PathTraversalSanitized(file_op) ∧ Sandboxed(file_op)
+  ∀ test t: CanFail(t) ∧ AssertsObservableBehavior(t) ∧ ¬MADE_TO_PASS(t)
+```
 
-## Key Paths
-- `logs/`
+- **Default mode**: Smallest safe, verified change that solves the root problem.
+- **Evidence-First**: Never report a task as complete, tested, or clean without attaching exact CLI outputs, test logs, or diff evidence.
+- **Fail-Closed Security**: Never disable path validation (`SAFE_DIRS`), shell sanitization, or input encoding checks.
 
-## Repository Rules
-- Keep changes focused on the task and match the existing file layout and naming patterns.
-- Update tests and docs when behavior changes or public interfaces move.
-- Do not commit secrets, credentials, ad-hoc exports, or large generated artifacts unless the repository already tracks them intentionally.
-- Prefer the existing automation and CI workflow over one-off commands when both paths exist.
+---
 
-## Global Best Practices
-- Understand the repo before editing: read the local guidance, README, docs, and relevant tests first.
-- Follow existing architecture, conventions, and tooling; do not guess stack-specific patterns when the repo already defines them.
-- Make the smallest safe change that solves the real problem, and prefer focused diffs over broad rewrites.
-- Verify changes with the repo's actual checks, and add or update regression tests for behavior changes when practical.
-- Keep public APIs and backward compatibility stable unless the task explicitly allows a breaking change.
-- Do not overwrite user work, unrelated changes, or existing security controls just to make a check pass.
-- Update docs when commands, config, setup, architecture, or user-visible behavior changes.
-- If the change is ambiguous or high-risk, stop and produce a safe partial fix or a clear plan instead of guessing.
-- Leave clear notes on what changed, why it changed, what checks ran, and any remaining risk.
-- Legacy agent guidance exists in `CLAUDE.md`; keep it aligned with `AGENTS.md` if those files remain in use.
+## 0. Truth, Evidence & Honest Testing Gate
 
-## Command Map
-- Install: `python -m pip install -e .`
-- Lint: No dedicated lint command detected.
-- Typecheck: No dedicated typecheck command detected.
-- Unit tests: No dedicated unit-test command detected.
-- Integration tests: No dedicated integration-test command detected.
-- E2E tests: No dedicated end-to-end test command detected.
-- Build: `python -m build`
-- Security scan: No dedicated security scan command detected; inspect `.github/workflows/` or add one before relying on automated maintenance.
+`TRUTH_STATE_MACHINE = attempted ≠ succeeded ≠ verified ≠ committed ≠ pushed ≠ deployed ≠ live_verified`
+`HONESTY ≻ GREEN_CI ≻ COVERAGE_%`
+`MADE_TO_PASS(t) ⇔ ¬CanFail(t, claimed_behavior) ∨ ExpectedValueCopiedFromBuggyOutput(t) ∨ MockIsTheUnitUnderTest(t) ∨ FailureSwallowed(t)`
+`TEST_GATE = Ship(test t) → CanFail(t) ∧ AssertsObservableBehavior(t) ∧ ¬MADE_TO_PASS(t)`
 
-## Maintenance Workflow
-- Start by reading this `AGENTS.md` and any closer `AGENTS.md` files in impacted directories.
-- Map the repo before editing: structure, package manager, lockfiles, scripts, tests, CI, and docs.
-- For larger maintenance sweeps, parallelize independent review lanes for correctness, security, dependency/tooling health, and test/CI reliability when the agent runtime supports it.
-- Prioritize work as P1 critical/security/production risk, P2 bugs/regressions/performance cliffs, P3 cleanup/readability.
-- When fixing behavior, add or update a regression test where practical.
-- Keep diffs small and reviewable; split unrelated fixes into separate PRs.
+### Forbidden (Made-to-pass tests)
+- `assert True`, `assert 1 == 1`, empty tests, or assertions on mocks instead of actual code behavior.
+- Catching exceptions and silently passing to make tests go green.
+- Modifying tests to match buggy output instead of fixing the root cause.
+- Skipping failing tests (`@pytest.mark.skip`, `xit`) to mask defects.
 
-## Done Definition
-- Run all relevant checks for the area you changed: lint, typecheck, unit, integration, e2e, security, and build when the repo defines them.
-- Verify results and ensure there is no obvious regression.
-- Summarize changes, checks run, risks, and next steps.
+### Required
+1. Every test must test observable analyzer output (AST diagnostics, lint errors, model suggestions, exit codes).
+2. Every test must have a plausible failing condition.
+3. If an external model or live API is unreachable in CI, explicitly disclose the boundary—do not ship synthetic mock pass-throughs as acceptance proof.
 
-## Code Review Standard
-- Correctness: does the change solve the problem, handle edge cases, and cover null/empty/error states?
-- Regression risk: could it break existing contracts, schemas, or shared-module assumptions?
-- Security: check auth, validation, injection, XSS, SSRF, CSRF, traversal, shell execution, secrets, and unsafe defaults.
-- Data integrity: check migrations, partial writes, duplicate writes, stale caches, destructive updates, and rollback safety.
-- Testing: ensure tests are sufficient, deterministic, and include a regression test for behavior fixes.
-- Performance: look for N+1 queries, repeated computation, render loops, blocking I/O, and hot-path regressions.
-- Maintainability: keep code understandable, aligned with existing abstractions, and free of dead code.
-- Observability: preserve useful errors, logs, traces, and debugging context.
+---
 
-## Review Output Format
-- severity: `P1`, `P2`, or `P3`
-- category
-- finding
-- evidence
-- recommended fix
-- whether a test is missing
+## 1. Repository Snapshot & Architecture
 
-## Notes
-- CI source of truth lives in `.github/workflows/`.
+- **Repository**: `jtgsystems/CleanCode`
+- **Default Branch**: `master`
+- **Visibility**: `public`
+- **Tech Stack**:
+  - **Core Engine**: Python 3.9+ (`setuptools`, `pyproject.toml`)
+  - **Local AI Orchestration**: Ollama API (`ollama>=0.6.1`)
+  - **Cloud AI Integrations**: Groq, Anthropic Claude, OpenAI, Google Gemini (`google-genai`)
+  - **GUI Workbench**: Python `tkinter` (Standard Library)
+  - **IDE Extension**: TypeScript / Node.js (`vscode-extension/`)
 
-Update this file whenever the repo's actual commands, structure, or maintenance rules change.
-Generated by `scripts/github/agentsmd_rollout.py`.
+### Key Directories
+```
+CleanCode/
+├── ENHANCER/                  # Primary Python package
+│   ├── __init__.py            # Package initialization & exports
+│   ├── cli.py                 # High-throughput CLI entry point (enhancer)
+│   ├── gui.py                 # Native desktop GUI interface (enhancer-gui)
+│   ├── code_analyzer.py       # AST parsing, file validation, metrics engine
+│   ├── core.py                # Analysis orchestration, parallel batching, safety
+│   ├── models.py              # 30+ Ollama & Cloud model registry & failover
+│   ├── analysis_reports/      # Output directory for exported reports
+│   └── logs/                  # Application runtime logs
+├── tests/                     # Automated test suite
+│   ├── test_code_analyzer.py  # Validation & AST parsing unit tests
+│   └── test_models.py         # Model config & fallback unit tests
+├── vscode-extension/          # Real-time VS Code LSP & Diagnostics Extension
+│   ├── src/                   # Extension TypeScript sources
+│   ├── package.json           # Extension manifests & commands
+│   └── tsconfig.json          # TypeScript build config
+├── banner.png                 # Official repository branding asset
+├── setup.py                   # Python setuptools packaging
+├── pyproject.toml             # Modern build system specifications
+├── check_ollama.py            # Local Ollama GPU acceleration diagnostic
+├── test_analyzer.py           # Quick standalone analyzer validation script
+├── README.md                  # Comprehensive user & developer documentation
+├── AGENTS.md                  # SOTA 2026 maintainer policy & invariants
+└── CLAUDE.md                  # Architecture & developer reference manual
+```
+
+---
+
+## 2. Command Map & Verification Standard
+
+### Python Core & Analyzer
+| Action | Command |
+| :--- | :--- |
+| **Install (Editable)** | `pip install -e ".[dev]"` |
+| **Run Unit Tests** | `pytest tests/ -v` |
+| **Quick Validation** | `python test_analyzer.py` |
+| **Ollama Connectivity** | `python check_ollama.py` |
+| **CLI Analyze File** | `enhancer analyze <file.py>` |
+| **CLI Analyze Directory** | `enhancer analyze <dir> --model qwen2.5-coder:latest` |
+| **CLI Suggest Improvements** | `enhancer suggest <file.py> --output ./reports/` |
+| **Launch Desktop GUI** | `enhancer-gui` or `python -m ENHANCER.gui` |
+| **Build Distribution** | `python -m build` |
+
+### VS Code Extension
+| Action | Command |
+| :--- | :--- |
+| **Install Dependencies** | `cd vscode-extension && npm install` |
+| **Compile TypeScript** | `npm run compile` |
+| **Lint Extension** | `npm run lint` |
+| **Package VSIX** | `npm run package` |
+
+---
+
+## 3. Maintenance & Code Review Standards
+
+1. **Security & Path Validation**:
+   - Path operations must strictly enforce `SAFE_DIRS` restrictions in `core.py`.
+   - Never allow directory traversal (`../`) to escape authorized workspaces.
+   - Content analyzer must detect unsanitized `os.system`, `subprocess.Popen(..., shell=True)`, and exposed API keys.
+2. **Multi-Model Consensus & Fallbacks**:
+   - Model execution must support graceful fallback: `Local Ollama -> Secondary Ollama -> Cloud API (Groq/Claude/OpenAI)`.
+   - Handle API timeouts and rate limits cleanly without hanging GUI or CLI execution.
+3. **AST Speed & Memory Hygiene**:
+   - Prefer AST-based static passes before invoking heavy LLM inference loops.
+   - Stream large file reads and memoize repeated AST traversals.
+4. **Git Rectification**:
+   - Every landed change must be verified with test outputs and committed with a concise 1-3 sentence explanation.
+
+---
+
+*Authored for JTG Systems — Enterprise Systems Architecture & AI Solutions*

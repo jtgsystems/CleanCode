@@ -53,7 +53,6 @@ class TestModelManager:
         models = manager.get_available_models()
         assert isinstance(models, dict)
 
-    @patch.object(ModelManager, 'available_ollama_models', ['test-model:latest'])
     def test_select_model_with_preference(self) -> None:
         """Test selecting a specific model."""
         manager = ModelManager()
@@ -63,7 +62,6 @@ class TestModelManager:
         assert model == 'test-model:latest'
         assert provider == 'ollama'
 
-    @patch.object(ModelManager, 'available_ollama_models', [])
     @patch.dict('os.environ', {}, clear=True)
     def test_select_model_no_models(self) -> None:
         """Test selecting model when none available."""
@@ -122,7 +120,6 @@ class TestModuleFunctions:
         models = get_available_models()
         assert isinstance(models, dict)
 
-    @patch.object(ModelManager, 'available_ollama_models', ['test:latest'])
     def test_is_model_available_function(self) -> None:
         """Test is_model_available convenience function."""
         # Reset singleton

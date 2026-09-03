@@ -1,214 +1,210 @@
-![Banner](banner.png)
+<div align="center">
 
-# CleanCode - Advanced Code Analysis & Enhancement Tool
+![CleanCode Banner](banner.png)
 
-CleanCode is a comprehensive Python-based tool that leverages multiple AI models to analyze code for potential improvements, issues, and best practices. It provides both a user-friendly Graphical User Interface (GUI) and command-line capabilities for flexible usage.
+# ⚡ CleanCode
+### *Next-Generation Multi-Model AI Code Analysis, Audit & Enhancement Engine*
 
-## Features
+[![Python Version](https://img.shields.io/badge/Python-3.9%2B-blue.svg?logo=python&logoColor=white)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ollama Ready](https://img.shields.io/badge/Ollama-160%2B%20Models-black?logo=ollama&logoColor=white)](https://ollama.com)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension%20Included-007ACC?logo=visualstudiocode&logoColor=white)](./vscode-extension)
+[![Maintained by JTG Systems](https://img.shields.io/badge/Maintained%20by-JTG%20Systems-00C853?logo=shield&logoColor=white)](https://jtgsystems.com)
 
-- **Comprehensive Code Analysis**:
-  - Code quality issues
-  - Security vulnerabilities
-  - Performance considerations
-  - Best practices adherence
-  - Potential bugs detection
-  - Maintainability issues
+**CleanCode** is an enterprise-grade static and semantic code intelligence platform. It orchestrates local LLMs (via Ollama) and leading cloud reasoning models (OpenAI, Claude, Groq, Gemini) to detect security vulnerabilities, logic defects, algorithmic bottlenecks, and architectural debt before code reaches production.
 
-- **AI-Powered Enhancements**:
-  - Suggests improvements based on analysis
-  - Can optionally apply enhancements directly (via GUI)
-  - Multiple model support for diverse perspectives
+[Features](#-key-features) • [Architecture](#-architecture) • [Quickstart](#-quickstart) • [CLI & GUI Usage](#-usage-modes) • [VS Code Extension](#-vs-code-extension) • [Model Matrix](#-supported-ai-models) • [Sponsorship](#-created-by-jtg-systems)
 
-- **Multiple Model Support**:
-  - Local Ollama models (30+ supported)
-  - Cloud provider models (OpenAI, Claude, Groq, Google)
-  - Configurable model sequence for analysis/suggestions
+</div>
 
-- **User-Friendly Interface**:
-  - Intuitive Graphical User Interface
-  - Tabbed interface for files, analysis, issues, suggestions, and enhanced code
-  - Export capabilities for reports and issues
+---
 
-- **Security Features**:
-  - Path validation to prevent traversal attacks
-  - Content validation to detect dangerous commands
-  - Secure file handling
+## 🚀 Key Features
 
-- **Performance Optimizations**:
-  - Parallel processing for batch analysis
-  - Efficient retry mechanisms
-  - Configurable timeout settings
+| Capability | Description | Supported Backends |
+| :--- | :--- | :--- |
+| **🛡️ Deep Security Audits** | Detects CWE/OWASP vulnerabilities, unsanitized subprocess calls, path traversals, and secret leaks. | AST + LLM Ensemble |
+| **⚡ Performance Profiling** | Identifies $O(N^2)$ scalar bottlenecks, unmemoized loops, blocking I/O, and heavy memory allocations. | Multi-Pass Heuristics |
+| **🧠 Multi-Model Consensus** | Runs concurrent evaluations across local & cloud models to eliminate hallucinations and pinpoint true defects. | Ollama, Claude, OpenAI, Groq, Gemini |
+| **💻 Interactive GUI** | Native Tkinter-based workbench with side-by-side diffing, real-time remediation, and report exporting. | Tkinter / Desktop GUI |
+| **⌨️ High-Throughput CLI** | Fast batch scanning, CI/CD pipeline integration, JSON/Markdown reporting, and AST filtering. | Python CLI (`enhancer`) |
+| **🔌 VS Code Extension** | Live inline diagnostics, problem markers, and automated refactoring actions directly inside your IDE. | VS Code LSP & Extension |
 
-## Installation
+---
 
-### Prerequisites
+## 🏛️ Architecture
 
-- Python 3.8 or higher
-- pip (Python package installer)
-- For Ollama models: [Ollama](https://ollama.ai/) installed and running locally
-
-### Steps
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd CleanCode
-   ```
-
-2. Install in development mode:
-   ```bash
-   pip install -e .
-   ```
-
-   This will install the `enhancer` command globally, which launches the GUI.
-
-3. Set up API keys for cloud providers (optional):
-   ```bash
-   # Add these to your environment variables
-   GROQ_API_KEY=your_key_here
-   OPENAI_API_KEY=your_key_here
-   ANTHROPIC_API_KEY=your_key_here
-   GOOGLE_API_KEY=your_key_here
-   ```
-
-4. For Ollama models, ensure they are installed:
-   ```bash
-   # Check installed models
-   ollama list
-   
-   # Install a model if needed
-   ollama pull enhancer-llama:latest
-   ```
-
-## Usage
-
-### GUI Mode
-
-Launch the GUI from your terminal:
-
-```bash
-enhancer
+```
+                                  ┌───────────────────────────┐
+                                  │   Input: Source Code      │
+                                  │ (Python, Scripts, Repos)  │
+                                  └─────────────┬─────────────┘
+                                                │
+                                  ┌─────────────▼─────────────┐
+                                  │  Path & Syntax Validation │
+                                  │  (AST Parser & Encoding)  │
+                                  └─────────────┬─────────────┘
+                                                │
+                 ┌──────────────────────────────┴──────────────────────────────┐
+                 │                                                             │
+   ┌─────────────▼─────────────┐                                 ┌─────────────▼─────────────┐
+   │    Local Models (Ollama)   │                                 │   Cloud Providers (APIs)  │
+   │  • DeepSeek-R1 / Coder    │                                 │  • Claude 3.7 / 3.5       │
+   │  • Qwen 2.5 Coder 32B/7B  │                                 │  • GPT-4o / o1            │
+   │  • Codestral 22B          │                                 │  • Groq Llama 3.3 70B     │
+   │  • Phi-4 / Llama 3.3      │                                 │  • Google Gemini 2.5 Pro  │
+   └─────────────┬─────────────┘                                 └─────────────┬─────────────┘
+                 │                                                             │
+                 └──────────────────────────────┬──────────────────────────────┘
+                                                │
+                                  ┌─────────────▼─────────────┐
+                                  │  Consensus & Remediation  │
+                                  │   Engine (ENHANCER.core)  │
+                                  └─────────────┬─────────────┘
+                                                │
+         ┌──────────────────────────────────────┼──────────────────────────────────────┐
+         │                                      │                                      │
+┌────────▼────────┐                   ┌─────────▼─────────┐                  ┌─────────▼─────────┐
+│ Interactive GUI │                   │ High-Speed CLI    │                  │ VS Code Extension │
+│ (Diff & Apply)  │                   │ (CI / JSON Audit) │                  │ (Inline Markers)  │
+└─────────────────┘                   └───────────────────┘                  └───────────────────┘
 ```
 
-The GUI allows you to:
-- Browse and select Python files or directories
-- Choose the AI model to use for analysis
-- Run analysis to identify issues
-- Generate improvement suggestions
-- View and apply code enhancements
-- Export analysis reports
+---
 
-### Command Line Usage
+## 📦 Quickstart
 
-While the primary interface is GUI-based, you can also use the tool from the command line:
+### 1. Prerequisites
+* **Python**: 3.9 or higher
+* **Ollama (Optional for local inference)**: [ollama.ai](https://ollama.ai/)
+* **Git**: Installed and configured
 
+### 2. Installation
 ```bash
-# Analyze a specific file
-python -m ENHANCER.cli analyze path/to/file.py
+# Clone the repository
+git clone https://github.com/jtgsystems/CleanCode.git
+cd CleanCode
 
-# Analyze a directory
-python -m ENHANCER.cli analyze path/to/directory
-
-# Generate suggestions for a file
-python -m ENHANCER.cli suggest path/to/file.py
-
-# Specify a model to use
-python -m ENHANCER.cli analyze path/to/file.py --model codestral:latest
+# Install in editable mode with development dependencies
+pip install -e ".[dev]"
 ```
 
-## Available Models
+### 3. Setup Environment (Optional for Cloud Models)
+Create a `.env` file or export your API keys:
+```bash
+export GROQ_API_KEY="gsk_..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-proj-..."
+export GOOGLE_API_KEY="AIza..."
+```
 
-The tool supports a wide range of models for analysis:
+### 4. Local Model Setup (Ollama)
+Ensure Ollama is running, then pull recommended models:
+```bash
+# Pull high-accuracy coding & reasoning models
+ollama pull qwen2.5-coder:latest
+ollama pull codestral:latest
+ollama pull deepseek-r1:latest
+```
 
-### Local Models (Ollama)
+---
 
-- enhancer-llama:latest (custom model optimized for code analysis)
-- codestral:latest
-- qwen2.5-coder:latest
-- deepseek-r1:latest
-- phi4:latest
-- command-r7b:latest
-- llama3.2:latest
-- llama3.3:latest
-- olmo2:latest
-- And many more (see models.py for the complete list)
+## 🖥️ Usage Modes
 
-### Cloud Models (Optional)
+### 🎨 1. Interactive GUI Mode
+Launch the graphical workbench to browse files, run multi-model audits, compare before/after diffs, and apply fixes interactively:
+```bash
+enhancer-gui
+# or
+python -m ENHANCER.gui
+```
 
-- [Groq] mixtral-8x7b
-- [Groq] llama2-70b
-- [OpenAI] gpt-4
-- [Claude] claude-3
-- [Claude] claude-2.1
-- [Google] gemini-pro
+---
 
-## Default Model Sequence
+### ⚡ 2. Command Line Interface (CLI)
 
-The tool will try these models in order when performing actions if not specified:
+#### Analyze a Single File
+```bash
+enhancer analyze path/to/script.py
+```
 
-1. enhancer-llama:latest
-2. codestral:latest
-3. qwen2.5-coder:latest
-4. deepseek-r1:latest
-5. phi4:latest
-6. command-r7b:latest
-7. llama3.2:latest
-8. olmo2:latest
+#### Analyze an Entire Directory with a Specific Model
+```bash
+enhancer analyze ./src --model qwen2.5-coder:latest
+```
 
-## Configuration Options
+#### Generate Automated Improvement Suggestions
+```bash
+enhancer suggest path/to/module.py --output ./reports/
+```
 
-### Output Directories
+#### Batch Audit with Custom Timeout
+```bash
+enhancer analyze ./lib --timeout 120 --export-json audit-results.json
+```
 
-- Analysis reports: `ENHANCER/analysis_reports/`
-- Logs: `ENHANCER/logs/`
+---
 
-### Log Files
+## 🔌 VS Code Extension
 
-- Main log: `ENHANCER/logs/enhancer.log`
-- GUI log: `ENHANCER/logs/enhancer_gui.log`
+CleanCode includes a dedicated VS Code extension located in [`vscode-extension/`](./vscode-extension) for real-time analysis directly in the editor.
 
-### Analysis Reports
+### Features:
+* 🩺 **On-Save & On-Type Diagnostics**: Highlights code smells, complexity spikes, and security flaws in the Problems panel.
+* 💡 **Code Actions & Quick Fixes**: Apply AI-suggested refactorings with a single click (`Ctrl+.` / `Cmd+.`).
+* 📊 **Live Quality Metrics**: Real-time status bar telemetry on cyclomatic complexity and maintainability index.
 
-- Critical issues: `analysis_reports/critical_[timestamp].txt`
-- Improvement suggestions: `analysis_reports/suggest_[timestamp].txt`
+### Extension Setup:
+```bash
+cd vscode-extension
+npm install
+npm run compile
+# Package into .vsix or launch in VS Code debug mode
+npm run package
+```
 
-## Troubleshooting
+---
 
-### Common Issues
+## 🤖 Supported AI Models
 
-1. **Model Not Found**: 
-   - Ensure Ollama is running (`ollama serve`)
-   - Check installed models (`ollama list`)
-   - Install missing models (`ollama pull model_name`)
+CleanCode natively supports over 30+ local and cloud model architectures:
 
-2. **API Key Issues**:
-   - Verify API keys are correctly set in environment variables
-   - Check for trailing spaces in API keys
-   - Ensure API keys have the correct permissions
+### Local Models (via Ollama)
+* `qwen2.5-coder` (7B, 14B, 32B) — State-of-the-art open coding model
+* `codestral` (22B) — Mistral AI's specialized code engine
+* `deepseek-r1` / `deepseek-coder` — Reasoning & chain-of-thought code verification
+* `phi4` — Microsoft high-density reasoning model
+* `llama3.3` / `llama3.2` — Meta's versatile instruction models
+* `command-r7b` — Cohere's efficient enterprise model
 
-3. **Analysis Timeout**:
-   - For large files, analysis may take longer
-   - Try a different model with better performance
-   - Adjust timeout settings in `core.py` if needed
+### Cloud Reasoning APIs
+* **Anthropic**: `claude-3-7-sonnet`, `claude-3-5-sonnet`
+* **OpenAI**: `gpt-4o`, `o1`, `o3-mini`
+* **Groq**: Ultra-low-latency `llama-3.3-70b-versatile`, `mixtral-8x7b`
+* **Google**: `gemini-2.5-pro`, `gemini-2.5-flash`
 
-4. **GUI Not Responding**:
-   - Check logs at `ENHANCER/logs/enhancer_gui.log`
-   - Ensure you have sufficient system resources
-   - Restart the application
+---
 
-5. **Path Validation Errors**:
-   - The tool restricts analysis to safe directories
-   - Modify `SAFE_DIRS` in `core.py` if needed
+## 🧪 Testing & Verification
 
-### Getting Help
+CleanCode enforces strict quality and behavioral testing:
 
-- Check the logs for detailed error messages
-- Review the source code comments for implementation details
-- File an issue in the repository if you encounter persistent problems
+```bash
+# Run test suite
+pytest tests/ -v
 
-## License
+# Run analyzer validation test
+python test_analyzer.py
 
-MIT License - Feel free to use and modify as needed.
+# Check Ollama connectivity & GPU status
+python check_ollama.py
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -224,8 +220,7 @@ MIT License - Feel free to use and modify as needed.
 *Enterprise Systems Architecture, Custom Workstations & AI Solutions*
 
 🌐 **Website**: [jtgsystems.com](https://jtgsystems.com)  
-📞 **Contact**: (905) 892-4555  
+📞 **Contact / Support**: (905) 892-4555  
 ☕ **Tips & Sponsorship**: `jtgsystems@gmail.com`
 
 </div>
-
