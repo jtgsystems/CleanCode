@@ -20,12 +20,16 @@ from ENHANCER.core import (
 from ENHANCER.code_analyzer import analyze_directory
 from ENHANCER.models import get_available_models
 
+# Ensure GUI runtime directories exist
+LOGS_DIR = Path(__file__).parent / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 # Configure GUI logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('ENHANCER/logs/enhancer_gui.log'),
+        logging.FileHandler(str(LOGS_DIR / 'enhancer_gui.log')),
         logging.StreamHandler()
     ]
 )

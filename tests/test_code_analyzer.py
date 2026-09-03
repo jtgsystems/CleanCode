@@ -16,6 +16,7 @@ from ENHANCER.code_analyzer import (
     analyze_file,
     analyze_directory,
     get_file_metrics,
+    calculate_ast_metrics,
 )
 
 
@@ -221,3 +222,51 @@ def func():
         assert 'blank_lines' in metrics
         assert 'docstring_lines' in metrics
         assert metrics['total_lines'] > 0
+
+
+class TestASTMetrics:
+    """Tests for calculate_ast_metrics function and AST visitor."""
+
+    def test_ast_cyclomatic_complexity(self) -> None:
+        """Test cyclomatic complexity calculation for control flow constructs."""
+        code = """
+def sample_logic(a, b, items):
+    if a > 0:
+        for x in items:
+            while b < 10:
+                b += 1
+    return b
+"""
+        metrics = calculate_ast_metrics(code)
+        assert metrics["cyclomatic_complexity"] >= 4
+        assert metrics["function_count"] == 1
+        assert len(metrics["functions"]) == 1
+        assert metrics["functions"][0]["name"] == "sample_logic"
+
+    def test_async_function_detection(self) -> None:
+        """Test async functions are tracked in AST metrics."""
+        code = """
+async def fetch_data():
+    return {"status": "ok"}
+"""
+        metrics = calculate_ast_metrics(code)
+        assert metrics["async_function_count"] == 1
+        assert metrics["functions"][0]["is_async"] is True
+
+    def test_ast_security_issue_detection(self) -> None:
+        """Test AST detector catches shell=True, mutable defaults, and pickle."""
+        code = """
+import subprocess
+import pickle
+
+def unsafe_fn(items=[]):
+    subprocess.Popen("ls -la", shell=True)
+    pickle.loads(b"data")
+"""
+        metrics = calculate_ast_metrics(code)
+        issues = metrics.get("ast_issues", [])
+        types = [i["type"] for i in issues]
+        assert "code_smell" in types
+        assert "security" in types
+        assert any("shell=True" in i["message"] for i in issues)
+        assert any("Mutable default" in i["message"] for i in issues)

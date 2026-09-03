@@ -21,12 +21,18 @@ from ENHANCER.code_analyzer import (
 )
 from ENHANCER.models import get_model_manager, select_model
 
+# Ensure runtime directories exist
+LOGS_DIR = Path(__file__).parent / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+REPORTS_DIR = Path(__file__).parent / "analysis_reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('ENHANCER/logs/enhancer.log'),
+        logging.FileHandler(str(LOGS_DIR / 'enhancer.log')),
         logging.StreamHandler()
     ]
 )
