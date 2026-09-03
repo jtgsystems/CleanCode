@@ -30,7 +30,7 @@ setup(
     },
     python_requires=">=3.9",
     author="Roo",
-    author_email="",  # Add author email if available
+    author_email="roo@jtgsystems.com",
     description="Advanced Code Analysis & Enhancement Tool using multiple AI models",
     url="https://github.com/jtgsystems/CleanCode",
     # Use try/except to handle the case where README.md might not exist

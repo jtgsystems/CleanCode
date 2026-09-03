@@ -1,6 +1,5 @@
 """Check Ollama GPU status."""
 
-import json
 import subprocess
 
 

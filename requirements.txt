@@ -1,0 +1,21 @@
+# Core dependencies for ENHANCER package
+# Generated: 2025-11-05
+# Python: >=3.8
+
+# HTTP client
+requests>=2.31.0,<3.0.0
+
+# AI Provider SDKs
+groq>=0.11.0,<1.0.0
+openai>=1.55.0,<2.0.0
+anthropic>=0.40.0,<1.0.0
+google-generativeai>=0.8.0,<1.0.0
+
+# Local AI models
+ollama>=0.4.0,<1.0.0
+
+# Utilities
+python-dotenv>=1.0.0,<2.0.0
+tiktoken>=0.8.0,<1.0.0
+
+# Note: tkinter is part of Python standard library

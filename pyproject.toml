@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ENHANCER"
+version = "1.0.0"
+description = "Advanced Code Analysis & Enhancement Tool using multiple AI models"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Roo", email = "roo@jtgsystems.com"}
+]
+keywords = ["code-analysis", "code-quality", "ai", "security", "best-practices"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "requests>=2.31.0,<3.0.0",
+    "groq>=0.11.0,<1.0.0",
+    "openai>=1.55.0,<2.0.0",
+    "anthropic>=0.40.0,<1.0.0",
+    "google-generativeai>=0.8.0,<1.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "tiktoken>=0.8.0,<1.0.0",
+    "ollama>=0.4.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "flake8>=7.1.0",
+    "black>=24.10.0",
+    "mypy>=1.13.0",
+    "bandit>=1.7.0",
+]
+
+[project.scripts]
+enhancer = "ENHANCER.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jtgsystems/CleanCode"
+Repository = "https://github.com/jtgsystems/CleanCode"
+Issues = "https://github.com/jtgsystems/CleanCode/issues"
+
+[tool.black]
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--cov=ENHANCER",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101", "B601"]
+
+[tool.coverage.run]
+source = ["ENHANCER"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
