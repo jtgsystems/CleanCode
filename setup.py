@@ -12,9 +12,9 @@ setup(
     install_requires=[
         "requests>=2.32.5,<3.0.0",
         "groq>=0.33.0,<2.0.0",
-        "openai>=2.14.0,<3.0.0",
-        "anthropic>=0.75.0,<1.0.0",
-        "google-genai>=1.0.0,<2.0.0",  # Replaced deprecated google-generativeai
+        "openai>=2.14.0,<4.0.0",
+        "anthropic>=0.75.0,<2.0.0",
+        "google-genai>=1.0.0,<3.0.0",  # Replaced deprecated google-generativeai
         "python-dotenv>=1.1.0,<2.0.0",
         "tiktoken>=0.12.0,<1.0.0",
         "ollama>=0.6.1,<1.0.0",
