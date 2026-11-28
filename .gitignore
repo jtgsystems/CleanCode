@@ -2,6 +2,8 @@
 .aider*
 
 # Environment variables and secrets
+.env
+.env.local
 .env.*.local
 *.key
 *.pem
@@ -53,6 +55,7 @@ ENHANCER/analysis_reports/
 analysis_reports/
 
 # IDE
+.vscode/
 .idea/
 *.swp
 *.swo
@@ -82,5 +85,3 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-config.bat
-node_modules
